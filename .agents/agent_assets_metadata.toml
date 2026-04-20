@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "zUlMd2u0NzyPtloilh1li"
+uri = "file://fitness-app.tar.gz"
+type = "unspecified"
+title = "AI Fitness Coach — Full Project"

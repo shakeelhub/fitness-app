@@ -1,0 +1,24 @@
+packages:
+  "framer-motion": "For cinematic page transitions, micro-interactions, and the pulsing AI orb"
+  "recharts": "For displaying user progress and weekly activity charts"
+  "@mediapipe/tasks-vision": "For real-time webcam pose detection and auto rep counting"
+
+images:
+  - path: "artifacts/fitness-app/public/images/intro-bg.png"
+    description: "Dark cinematic background with subtle glowing electric cyan geometric lines and a gritty texture, futuristic sports aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/fitness-app/public/images/ai-orb.png"
+    description: "A glowing 3D holographic sphere made of energy and light, neon purple and cyan colors on a pure black background"
+    aspect_ratio: "1:1"
+  - path: "artifacts/fitness-app/public/images/badge-streak.png"
+    description: "A futuristic 3D metallic gaming badge with a lightning bolt, glowing with intense yellow and neon orange aura"
+    aspect_ratio: "1:1"
+  - path: "artifacts/fitness-app/public/images/badge-power.png"
+    description: "A futuristic 3D metallic gaming badge with a flexed muscle or dumbbell, glowing with electric blue and purple aura"
+    aspect_ratio: "1:1"
+
+notes:
+  - "Using generated hooks from @workspace/api-client-react for standard CRUD."
+  - "SSE streaming for OpenAI chat requires manual fetch + ReadableStream implementation as Orval hooks don't support SSE."
+  - "Web Speech API is used for STT."
+  - "MediaPipe tasks-vision is loaded with CDN wasm paths to avoid local serving issues."

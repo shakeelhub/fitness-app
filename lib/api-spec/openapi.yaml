@@ -1,0 +1,705 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: AI Fitness Coach API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: openai
+    description: OpenAI AI chat, image, and audio operations
+  - name: users
+    description: User profile operations
+  - name: workouts
+    description: Workout plan and session operations
+  - name: exercises
+    description: Exercise library operations
+  - name: progress
+    description: Progress tracking operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpenaiConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a text message and receive a streaming text response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOpenaiMessageBody"
+      responses:
+        "200":
+          description: SSE stream of assistant text chunks
+          content:
+            text/event-stream: {}
+  /openai/conversations/{id}/voice-messages:
+    post:
+      operationId: sendOpenaiVoiceMessage
+      tags: [openai]
+      summary: Send audio and receive a streaming voice response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOpenaiVoiceMessageBody"
+      responses:
+        "200":
+          description: SSE stream of transcript and audio chunks
+          content:
+            text/event-stream: {}
+
+  /users/profile:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    post:
+      operationId: upsertUserProfile
+      tags: [users]
+      summary: Create or update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertUserProfileBody"
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /workouts/generate:
+    post:
+      operationId: generateWorkoutPlan
+      tags: [workouts]
+      summary: Generate a personalized workout plan with AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateWorkoutBody"
+      responses:
+        "200":
+          description: Generated workout plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutPlan"
+
+  /workouts/sessions:
+    get:
+      operationId: listWorkoutSessions
+      tags: [workouts]
+      summary: List workout sessions history
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkoutSession"
+    post:
+      operationId: createWorkoutSession
+      tags: [workouts]
+      summary: Create a new workout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkoutSessionBody"
+      responses:
+        "201":
+          description: Created session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+  /workouts/sessions/{id}:
+    get:
+      operationId: getWorkoutSession
+      tags: [workouts]
+      summary: Get a workout session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Workout session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+    patch:
+      operationId: updateWorkoutSession
+      tags: [workouts]
+      summary: Update workout session (complete it, log reps etc)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkoutSessionBody"
+      responses:
+        "200":
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutSession"
+
+  /exercises:
+    get:
+      operationId: listExercises
+      tags: [exercises]
+      summary: List exercises library
+      responses:
+        "200":
+          description: List of exercises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exercise"
+
+  /progress/stats:
+    get:
+      operationId: getProgressStats
+      tags: [progress]
+      summary: Get user progress and achievement stats
+      responses:
+        "200":
+          description: Progress stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgressStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    OpenaiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+    OpenaiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+    CreateOpenaiConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required:
+        - title
+    SendOpenaiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
+    SendOpenaiVoiceMessageBody:
+      type: object
+      properties:
+        audio:
+          type: string
+          description: Base64-encoded audio data
+      required:
+        - audio
+    OpenaiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+      required:
+        - id
+        - title
+        - createdAt
+        - messages
+    OpenaiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        age:
+          type: integer
+        fitnessLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        goals:
+          type: array
+          items:
+            type: string
+        preferredWorkouts:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - fitnessLevel
+        - goals
+        - preferredWorkouts
+        - createdAt
+        - updatedAt
+    UpsertUserProfileBody:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        fitnessLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        goals:
+          type: array
+          items:
+            type: string
+        preferredWorkouts:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - fitnessLevel
+        - goals
+        - preferredWorkouts
+
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        muscleGroup:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        description:
+          type: string
+        instructions:
+          type: array
+          items:
+            type: string
+        durationSeconds:
+          type: integer
+        repsDefault:
+          type: integer
+        setsDefault:
+          type: integer
+      required:
+        - id
+        - name
+        - muscleGroup
+        - difficulty
+        - description
+        - instructions
+
+    WorkoutExercise:
+      type: object
+      properties:
+        exerciseId:
+          type: integer
+        name:
+          type: string
+        sets:
+          type: integer
+        reps:
+          type: integer
+        durationSeconds:
+          type: integer
+        restSeconds:
+          type: integer
+        instructions:
+          type: string
+      required:
+        - name
+        - sets
+        - reps
+
+    WorkoutPlan:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        totalDurationMinutes:
+          type: integer
+        exercises:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkoutExercise"
+        aiCoachNote:
+          type: string
+      required:
+        - title
+        - description
+        - totalDurationMinutes
+        - exercises
+        - aiCoachNote
+
+    WorkoutSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        planData:
+          type: string
+          description: JSON stringified workout plan
+        status:
+          type: string
+          enum: [planned, active, completed, skipped]
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        totalReps:
+          type: integer
+        totalSets:
+          type: integer
+        durationMinutes:
+          type: integer
+        caloriesBurned:
+          type: integer
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - status
+        - createdAt
+    CreateWorkoutSessionBody:
+      type: object
+      properties:
+        title:
+          type: string
+        planData:
+          type: string
+      required:
+        - title
+    UpdateWorkoutSessionBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [planned, active, completed, skipped]
+        totalReps:
+          type: integer
+        totalSets:
+          type: integer
+        durationMinutes:
+          type: integer
+        caloriesBurned:
+          type: integer
+        notes:
+          type: string
+
+    ProgressStats:
+      type: object
+      properties:
+        totalSessions:
+          type: integer
+        totalReps:
+          type: integer
+        totalMinutes:
+          type: integer
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        personalRecords:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonalRecord"
+        weeklyActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyActivity"
+      required:
+        - totalSessions
+        - totalReps
+        - totalMinutes
+        - currentStreak
+        - longestStreak
+        - personalRecords
+        - weeklyActivity
+
+    PersonalRecord:
+      type: object
+      properties:
+        exercise:
+          type: string
+        value:
+          type: integer
+        unit:
+          type: string
+        achievedAt:
+          type: string
+          format: date-time
+      required:
+        - exercise
+        - value
+        - unit
+        - achievedAt
+
+    WeeklyActivity:
+      type: object
+      properties:
+        day:
+          type: string
+        sessions:
+          type: integer
+        minutes:
+          type: integer
+      required:
+        - day
+        - sessions
+        - minutes
+
+    GenerateWorkoutBody:
+      type: object
+      properties:
+        targetMuscles:
+          type: array
+          items:
+            type: string
+        durationMinutes:
+          type: integer
+        fitnessLevel:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        goals:
+          type: array
+          items:
+            type: string
+        userRequest:
+          type: string
+          description: Natural language request from user
+      required:
+        - targetMuscles
+        - durationMinutes
+        - fitnessLevel
